@@ -7,7 +7,7 @@ defmodule TestMigration do
       add :fun,   :binary
       add :args,  :binary
 
-      add :run_at, :utc_datetime, default: "NOW()"
+      add :run_at, :utc_datetime, default: fragment("(NOW() AT TIME ZONE 'UTC')")
 
       timestamps(type: :utc_datetime)
     end

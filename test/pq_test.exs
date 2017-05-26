@@ -14,10 +14,30 @@ defmodule PQTest do
 
   setup do
     Process.register(self(), :exunit_current_test)
+    TestQueue.clear()
     :ok
   end
 
   test "enqueue job" do
-    TestQueue.enqueue(Jobs, :job0, [])
+    {:ok, _} = TestQueue.enqueue(Jobs, :job0, [])
+
+    [job] = TestQueue.all()
+
+    assert job.run_at <= DateTime.utc_now()
+    assert job.mod == Jobs
+    assert job.fun == :job0
+    assert job.args == []
+  end
+
+  test "enqueue job in the future" do
+    {:ok, at, _} = DateTime.from_iso8601("2038-01-01T12:01:59.000000Z")
+    {:ok, _} = TestQueue.enqueue(Jobs, :job0, [], at: at)
+
+    [job] = TestQueue.all()
+
+    assert job.run_at == at
+    assert job.mod == Jobs
+    assert job.fun == :job0
+    assert job.args == []
   end
 end
