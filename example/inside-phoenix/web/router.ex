@@ -19,6 +19,8 @@ defmodule Example.Router do
     get "/", PageController, :index
   end
 
+  forward "/secret", Kick.Web, queue: Example.Queue
+
   # Other scopes may use custom stacks.
   # scope "/api", Example do
   #   pipe_through :api

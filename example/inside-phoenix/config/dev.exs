@@ -35,8 +35,9 @@ config :phoenix, :stacktrace_depth, 20
 # Configure your database
 config :example, Example.Repo,
   adapter: Ecto.Adapters.Postgres,
-  username: "postgres",
-  password: "postgres",
+  username: "teamon",
+  password: "",
   database: "example_dev",
   hostname: "localhost",
+  port: 5433,
   pool_size: 10

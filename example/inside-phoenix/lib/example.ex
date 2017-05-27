@@ -14,6 +14,7 @@ defmodule Example do
       supervisor(Example.Endpoint, []),
       # Start your own worker by calling: Example.Worker.start_link(arg1, arg2, arg3)
       # worker(Example.Worker, [arg1, arg2, arg3]),
+      supervisor(Example.Queue, [])
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
