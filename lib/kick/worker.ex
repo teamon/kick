@@ -16,25 +16,24 @@ defmodule Kick.Worker do
   end
 
   def init(queue) do
-    Process.flag(:trap_exit, true)
-    send self(), :fetch
+    send self(), :tick
     {:ok, %__MODULE__{queue: queue, repo: queue.repo}}
   end
 
-  def handle_info(:fetch, %{repo: repo} = state) do
-    case fetch(repo) do
+  def handle_info(:tick, %{repo: repo} = state) do
+    case tick(repo) do
       {:ok, :empty} ->
-        Process.send_after self(), :fetch, @fetch_every
+        Process.send_after self(), :tick, @fetch_every
         {:noreply, state}
       {:ok, _} ->
-        send self(), :fetch
+        send self(), :tick
         {:noreply, state}
       {:error, reason} ->
         {:stop, reason, state}
     end
   end
 
-  defp fetch(repo) do
+  def tick(repo) do
     repo.transaction(fn ->
       case get(repo) do
         nil -> :empty
@@ -53,6 +52,7 @@ defmodule Kick.Worker do
 
   defp execute(repo, job) do
     Logger.info "#{label(job)} starting"
+    Process.flag(:trap_exit, true)
     pid = spawn_link(__MODULE__, :exec, [job.mod, job.fun, job.args])
 
     receive do
@@ -67,12 +67,14 @@ defmodule Kick.Worker do
         Logger.error "#{label(job)} timeout"
         retry(repo, job, {:timeout, @job_timeout})
     end
+
+    Process.flag(:trap_exit, false)
   end
 
   def exec(mod, fun, args) do
     apply(mod, fun, args)
   rescue
-    ex -> Process.exit(self(), {:exception, ex, System.stacktrace()})
+    ex -> Process.exit(self(), {ex, System.stacktrace()})
   end
 
   defp retry(repo, job, reason) do

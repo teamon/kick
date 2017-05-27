@@ -9,7 +9,7 @@ Application.put_env(:kick_test, TestRepo, [
 ])
 
 Application.put_env(:kick_test, TestQueue, [
-  workers: 2
+  workers: 0
 ])
 
 defmodule TestRepo do
