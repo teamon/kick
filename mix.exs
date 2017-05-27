@@ -1,8 +1,8 @@
-defmodule PQ.Mixfile do
+defmodule Kick.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :pq,
+    [app: :kick,
      version: "0.1.0",
      elixir: "~> 1.4",
      build_embedded: Mix.env == :prod,

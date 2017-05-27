@@ -1,4 +1,4 @@
-defmodule PQTest do
+defmodule KickTest do
   use ExUnit.Case
 
   defmodule Jobs do
@@ -15,6 +15,7 @@ defmodule PQTest do
   setup do
     Process.register(self(), :exunit_current_test)
     TestQueue.clear()
+
     :ok
   end
 
