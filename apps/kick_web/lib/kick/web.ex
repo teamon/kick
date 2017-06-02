@@ -6,13 +6,19 @@ defmodule Kick.Web do
 
   get "/" do
     jobs = queue(conn).all()
-    render(conn, :index, jobs: jobs)
+    render(conn, :jobs, [jobs])
   end
 
   get "/jobs/:id" do
     case queue(conn).get(id) do
-      {:ok, job} -> render(conn, :show, job: job)
-      :error -> render(conn, :not_found)
+      {:ok, job} ->
+        runs =
+          job.runs
+          |> Enum.with_index()
+          |> Enum.reverse()
+        render(conn, :job, [job, runs])
+      :error ->
+        render(conn, :not_found)
     end
   end
 
@@ -26,128 +32,38 @@ defmodule Kick.Web do
 
   ## RENDERING
 
-  defp render(:layout, %{body: body}) do
-    [
-      """
-      <html>
-      <head>
-        <title>Kick</title>
-        <style>
-          * { font-family: monospace; font-size: 1em; }
-          table { border-collapse: collapse; }
-          td,th { padding: 3px 5px; }
-          td { border-top: 1px solid #eee; }
-        </style>
-      </head>
-      <body>
-      """,
-      body,
-      """
-      </body>
-      </html>
-      """
-    ]
+  defmodule Templates do
+    require EEx
+    EEx.function_from_file :def, :layout, "#{__DIR__}/web/layout.html.eex", [:conn, :body]
+    EEx.function_from_file :def, :jobs,   "#{__DIR__}/web/jobs.html.eex",   [:conn, :jobs]
+    EEx.function_from_file :def, :job,    "#{__DIR__}/web/job.html.eex",    [:conn, :job, :runs]
+
+    defp link(conn, label, to: to) do
+      url = Enum.join(conn.script_name, "/") <> to_string(to)
+      ~s|<a href="/#{url}">#{escape(label)}</a>|
+    end
+
+    defp escape(value), do: Plug.HTML.html_escape(value)
+
+    defp modname("Elixir." <> name), do: name
+    defp modname(atom), do: modname(to_string(atom))
+
+    defp format_run({ex, trace}), do: Exception.format(:error, ex, trace)
+    defp format_run(signal), do: Exception.format(:exit, signal, [])
   end
 
-  defp render(:index, %{jobs: []}) do
-    "No jobs"
-  end
-  defp render(:index, %{jobs: jobs, conn: conn}) do
-    [
-      """
-      <table>
-        <tr>
-          <th>ID</th>
-          <th>Module</th>
-          <th>Function</th>
-          <th>Args</th>
-          <th>Run At</th>
-          <th>Retries</th>
-        </tr>
-      """,
-      for job <- jobs do
-        [
-          "<tr>",
-            "<td>",
-              link(conn, "##{job.id}", to: "/jobs/#{job.id}"),
-            "</td>",
-            "<td>", escape(modname(job.mod)), "</td>",
-            "<td>", escape(inspect(job.fun)), "</td>",
-            "<td>", escape(inspect(job.args)), "</td>",
-            "<td>", escape(to_string(job.run_at)), "</td>",
-            "<td>", escape(to_string(length(job.runs))), "</td>",
-          "</tr>"
-        ]
-      end,
-      """
-      </table>
-      """
-    ]
+  defp render(conn, :not_found) do
+    conn
+    |> put_resp_content_type("text/html")
+    |> send_resp(404, "Not Found")
   end
 
-  defp render(:show, %{job: job, conn: conn}) do
-    runs =
-      job.runs
-      |> Enum.with_index()
-      |> Enum.reverse()
-
-    [
-      "<table>",
-        "<tr><th>ID</th><td>",        "##{job.id}", "</td></tr>",
-        "<tr><th>Module</th><td>",    escape(modname(job.mod)), "</td></tr>",
-        "<tr><th>Function</th><td>",  escape(inspect(job.fun)), "</td></tr>",
-        "<tr><th>Args</th><td>",      escape(inspect(job.args)), "</td></tr>",
-        "<tr><th>Run At</th><td>",    escape(to_string(job.run_at)), "</td></tr>",
-        "<tr><th>Retries</th><td>",   escape(to_string(length(job.runs))), "</td></tr>",
-      "</table>",
-      "<table>",
-        "<tr><th>Run #</th><th>Stacktrace</th></tr>",
-        for {run, i} <- runs do
-          [
-            "<tr>",
-              "<th>#{i}</th>",
-              "<td><pre>#{format_run(run)}</pre></td>",
-            "</tr>"
-          ]
-        end,
-      "</table>"
-    ]
-  end
-
-  defp render(:not_found, _) do
-    "Not Found"
-  end
-
-  defp render(conn, tpl, assigns) do
-    assigns =
-      assigns
-      |> Keyword.put(:conn, conn)
-      |> Map.new()
-
-    assigns =
-      assigns
-      |> Map.put(:body, render(tpl, assigns))
+  defp render(conn, tpl, args \\ []) do
+    body = apply(Templates, tpl, [conn | args])
+    body = apply(Templates, :layout, [conn, body])
 
     conn
-    |> put_resp_header("content-type", "text/html")
-    |> send_resp(200, render(:layout, assigns))
+    |> put_resp_content_type("text/html")
+    |> send_resp(200, body)
   end
-
-  defp format_run({ex, trace}) do
-    Exception.format(:error, ex, trace)
-    # inspect {ex, trace}
-  end
-  defp format_run(signal) do
-    Exception.format(:exit, signal, [])
-  end
-
-  defp link(conn, label, to: to) do
-    url = Enum.join(conn.script_name, "/") <> to_string(to)
-    ~s|<a href="/#{url}">#{escape(label)}</a>|
-  end
-
-  defp escape(value), do: Plug.HTML.html_escape(value)
-
-  defp modname("Elixir." <> name), do: name
-  defp modname(atom), do: modname(to_string(atom))
 end

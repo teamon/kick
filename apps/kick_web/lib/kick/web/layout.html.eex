@@ -1,0 +1,14 @@
+<html>
+<head>
+  <title>Kick</title>
+  <style>
+    * { font-family: monospace; font-size: 1em; }
+    table { border-collapse: collapse; }
+    td,th { padding: 3px 5px; }
+    td { border-top: 1px solid #eee; }
+  </style>
+</head>
+<body>
+  <%= body %>
+</body>
+</html>

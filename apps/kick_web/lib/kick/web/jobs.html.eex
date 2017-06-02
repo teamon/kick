@@ -1,0 +1,20 @@
+<table>
+  <tr>
+    <th>ID</th>
+    <th>Module</th>
+    <th>Function</th>
+    <th>Args</th>
+    <th>Run At</th>
+    <th>Retries</th>
+  </tr>
+  <%= for job <- jobs do %>
+  <tr>
+    <td><%= link(conn, "##{job.id}", to: "/jobs/#{job.id}") %></td>
+    <td><%= escape(modname(job.mod)) %></td>
+    <td><%= escape(inspect(job.fun)) %></td>
+    <td><%= escape(inspect(job.args)) %></td>
+    <td><%= escape(to_string(job.run_at)) %></td>
+    <td><%= escape(to_string(length(job.runs))) %></td>
+  </tr>
+  <% end %>
+</table>

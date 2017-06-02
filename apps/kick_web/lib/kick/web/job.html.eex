@@ -1,0 +1,39 @@
+<table>
+  <tr>
+    <th>ID</th>
+    <td><%= "##{job.id}" %></td>
+  </tr>
+  <tr>
+    <th>Module</th>
+    <td><%= escape(modname(job.mod)) %></td>
+  </tr>
+  <tr>
+    <th>Function</th>
+    <td><%= escape(inspect(job.fun)) %></td>
+  </tr>
+  <tr>
+    <th>Args</th>
+    <td><%= escape(inspect(job.args)) %></td>
+  </tr>
+  <tr>
+    <th>Run At</th>
+    <td><%= escape(to_string(job.run_at)) %></td>
+    </tr>
+  <tr>
+    <th>Retries</th>
+    <td><%= escape(to_string(length(job.runs))) %></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <th>Run #</th>
+    <th>Stacktrace</th>
+  </tr>
+  <%= for {run, i} <- runs do %>
+  <tr>
+    <th><%= i+1 %></th>
+    <td><pre><%= format_run(run) %></pre></td>
+  </tr>
+  <% end %>
+</table>
