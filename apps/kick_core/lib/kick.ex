@@ -34,6 +34,8 @@ defmodule Kick do
   alias Kick.Worker
   alias Kick.Job
 
+  import Ecto.Query
+
   def start_link(queue, _opts \\ []) do
     import Supervisor.Spec
 
@@ -57,7 +59,9 @@ defmodule Kick do
   end
 
   def all(repo) do
-    repo.all(Job)
+    Job
+    |> order_by(asc: :run_at)
+    |> repo.all()
   end
 
   def get(repo, id) do
