@@ -22,8 +22,11 @@ defmodule Kick do
       end
 
       def all, do: Kick.all(@repo)
+      def get(id), do: Kick.get(@repo, id)
       def count, do: Kick.count(@repo)
+
       def clear, do: Kick.clear(@repo)
+
       def tick, do: Kick.Worker.tick(@repo)
     end
   end
@@ -55,6 +58,13 @@ defmodule Kick do
 
   def all(repo) do
     repo.all(Job)
+  end
+
+  def get(repo, id) do
+    case repo.get(Job, id) do
+      nil -> :error
+      job -> {:ok, job}
+    end
   end
 
   def count(repo) do
