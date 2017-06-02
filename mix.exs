@@ -2,24 +2,13 @@ defmodule Kick.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :kick,
-     version: "0.1.0",
-     elixir: "~> 1.4",
+    [apps_path: "apps",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      deps: deps()]
   end
 
-  def application do
-    # Specify extra applications you'll use from Erlang/Elixir
-    [extra_applications: [:logger]]
-  end
-
   defp deps do
-    [
-      {:postgrex, ">= 0.0.0"},
-      {:ecto,     "~> 2.1"},
-      {:plug,     "~> 1.0", optional: true}
-    ]
+    []
   end
 end
